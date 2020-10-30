@@ -1,10 +1,8 @@
 package src;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 /**
  * Created by Yahya Hassanzadeh on 20/09/2017.
@@ -16,11 +14,13 @@ public class ConnectionToServer
     public static final int DEFAULT_SERVER_PORT = 4444;
     private Socket s;
     //private BufferedReader br;
-    protected BufferedReader is;
-    protected PrintWriter os;
+    protected DataInputStream is;
+    protected DataOutputStream os;
 
     protected String serverAddress;
     protected int serverPort;
+    final byte[] buf = new byte[4096];
+
 
     /**
      *
@@ -45,8 +45,8 @@ public class ConnectionToServer
             /*
             Read and write buffers on the socket
              */
-            is = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            os = new PrintWriter(s.getOutputStream());
+            is = new DataInputStream(s.getInputStream());
+            os = new DataOutputStream(s.getOutputStream());
 
             System.out.println("Successfully connected to " + serverAddress + " on port " + serverPort);
         }
@@ -71,12 +71,16 @@ public class ConnectionToServer
             /*
             Sends the message to the server via PrintWriter
              */
-            os.println(message);
-            os.flush();
+            byte phase = (byte)0;
+            byte type = (byte)1; // auth_challenge;
+            Message.sendMessage(os, new Message(phase,type, message.getBytes().length, message));
+            //os.println(message);
+           // os.flush();
             /*
             Reads a line from the server via Buffer Reader
              */
-            response = is.readLine();
+            Message server_response = Message.nextMessageFromSocket(is);
+            response = server_response.payload;
         }
         catch(IOException e)
         {
@@ -94,7 +98,9 @@ public class ConnectionToServer
         String response = new String();
         try
         {
-            response = is.readLine();
+            ByteBuffer buff = ByteBuffer.wrap(buf);
+            Message server_response = Message.nextMessageFromSocket(is);
+            response = server_response.payload;
             System.out.println("response is here");
         }
         catch(IOException e)

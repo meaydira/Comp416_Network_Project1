@@ -12,7 +12,7 @@ public class Main
         //System.out.println("Enter a message for the echo");
         String message = "";
 
-        System.out.println("Response from server: " +connectionToServer.getServerOutput());
+        System.out.println("Response from server: " + connectionToServer.getServerOutput());
 
         while (!message.equals("QUIT"))
         {
